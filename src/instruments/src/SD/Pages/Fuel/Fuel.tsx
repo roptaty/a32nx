@@ -329,16 +329,20 @@ type PumpProps = {
 
 const Pump = ({ x, y, onBus = 'DC_ESS', pumpNumber }: PumpProps) => {
     const [active] = useSimVar(`FUELSYSTEM PUMP ACTIVE:${pumpNumber}`, 'bool', 500);
-    const [pushButtonPressed] = pumpNumber === 1 || pumpNumber === 4
-        ? pumpNumber === 1
-            ? useSimVar('L:XMLVAR_Momentary_PUSH_OVHD_FUEL_PUMP1_Pressed', 'bool', 500)
-            : useSimVar('L:XMLVAR_Momentary_PUSH_OVHD_FUEL_PUMP2_Pressed', 'bool', 500)
-        : [null];
-
+    const [pump1Pressed] = useSimVar('L:XMLVAR_Momentary_PUSH_OVHD_FUEL_PUMP1_Pressed', 'bool', 500);
+    const [pump4Pressed] = useSimVar('L:XMLVAR_Momentary_PUSH_OVHD_FUEL_PUMP2_Pressed', 'bool', 500);
     const [busIsPowered] = useSimVar(`L:A32NX_ELEC_${onBus}_BUS_IS_POWERED`, 'bool', 1000);
 
+    // FIXME clean this up in the system implementation
+    let pumpActive = active;
+    if (pumpNumber === 1) {
+        pumpActive = pump1Pressed;
+    } else {
+        pumpActive = pump4Pressed;
+    }
+
     return (
-        <g className={(pumpNumber === 1 || pumpNumber === 4 ? pushButtonPressed && busIsPowered : active && busIsPowered) ? 'ThickShape PumpActive' : 'ThickShape PumpInactive'}>
+        <g className={(pumpActive && busIsPowered) ? 'ThickShape PumpActive' : 'ThickShape PumpInactive'}>
             <rect x={x} y={y} width="30" height="30" />
             {active
                 ? (busIsPowered
