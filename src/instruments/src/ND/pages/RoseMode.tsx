@@ -5,7 +5,7 @@ import { LatLongData } from '@typings/fs-base-ui/html_ui/JS/Types';
 import { useFlightPlanManager } from '@instruments/common/flightplan';
 import { MathUtils } from '@shared/MathUtils';
 import { TuningMode } from '@fmgc/radionav';
-import { Mode, EfisSide, NdSymbol } from '@shared/NavigationDisplay';
+import { Mode, EfisSide, NdTraffic, NdSymbol } from '@shared/NavigationDisplay';
 import { LateralMode } from '@shared/autopilot';
 import { ToWaypointIndicator } from '../elements/ToWaypointIndicator';
 import { FlightPlan, FlightPlanType } from '../elements/FlightPlan';
@@ -18,6 +18,7 @@ import { Traffic } from '../elements/Traffic';
 
 export interface RoseModeProps {
     symbols: NdSymbol[],
+    airTraffic: NdTraffic[],
     adirsAlign: boolean,
     rangeSetting: number,
     mode: Mode.ROSE_ILS | Mode.ROSE_VOR | Mode.ROSE_NAV,
@@ -26,7 +27,7 @@ export interface RoseModeProps {
     mapHidden: boolean,
 }
 
-export const RoseMode: FC<RoseModeProps> = ({ symbols, adirsAlign, rangeSetting, mode, side, ppos, mapHidden }) => {
+export const RoseMode: FC<RoseModeProps> = ({ symbols, airTraffic, adirsAlign, rangeSetting, mode, side, ppos, mapHidden }) => {
     const flightPlanManager = useFlightPlanManager();
 
     const [magHeading] = useSimVar('PLANE HEADING DEGREES MAGNETIC', 'degrees');
@@ -78,12 +79,6 @@ export const RoseMode: FC<RoseModeProps> = ({ symbols, adirsAlign, rangeSetting,
         }
         return (
             <>
-                <Overlay
-                    heading={heading}
-                    rangeSetting={rangeSetting}
-                    tcasMode={tcasMode}
-                />
-
                 <g id="map" clipPath="url(#rose-mode-map-clip)">
                     { mode === Mode.ROSE_NAV && (
                         <g visibility={mapHidden ? 'hidden' : 'visible'}>
@@ -110,12 +105,18 @@ export const RoseMode: FC<RoseModeProps> = ({ symbols, adirsAlign, rangeSetting,
                                 || fmaLatMode === LateralMode.TRACK) && !fmaLatArmed) || !flightPlanManager.getCurrentFlightPlan().length) && (
                                 <TrackLine x={384} y={384} heading={heading} track={track} />
                             )}
-                            <Traffic mode={mode} mapParams={mapParams} />
+                            <Traffic mode={mode} side={side} airTraffic={airTraffic} mapParams={mapParams} />
                         </g>
                     )}
                     <RadioNeedle index={1} side={side} displayMode={mode} centreHeight={384} />
                     <RadioNeedle index={2} side={side} displayMode={mode} centreHeight={384} />
                 </g>
+
+                <Overlay
+                    heading={heading}
+                    rangeSetting={rangeSetting}
+                    tcasMode={tcasMode}
+                />
 
                 { mode === Mode.ROSE_VOR && <VorCaptureOverlay heading={magHeading} side={side} /> }
 

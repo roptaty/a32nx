@@ -4,7 +4,7 @@ import { getSmallestAngle } from '@instruments/common/utils';
 import { MathUtils } from '@shared/MathUtils';
 import { useFlightPlanManager } from '@instruments/common/flightplan';
 import { LatLongData } from '@typings/fs-base-ui/html_ui/JS/Types';
-import { RangeSetting, Mode, EfisSide, NdSymbol } from '@shared/NavigationDisplay';
+import { RangeSetting, Mode, EfisSide, NdSymbol, NdTraffic } from '@shared/NavigationDisplay';
 import { LateralMode } from '@shared/autopilot';
 import { FlightPlan, FlightPlanType } from '../elements/FlightPlan';
 import { MapParameters } from '../utils/MapParameters';
@@ -17,6 +17,7 @@ import { Traffic } from '../elements/Traffic';
 
 export interface ArcModeProps {
     symbols: NdSymbol[],
+    airTraffic: NdTraffic[],
     adirsAlign: boolean,
     rangeSetting: RangeSetting,
     side: EfisSide,
@@ -24,7 +25,7 @@ export interface ArcModeProps {
     mapHidden: boolean,
 }
 
-export const ArcMode: React.FC<ArcModeProps> = ({ symbols, adirsAlign, rangeSetting, side, ppos, mapHidden }) => {
+export const ArcMode: React.FC<ArcModeProps> = ({ symbols, airTraffic, adirsAlign, rangeSetting, side, ppos, mapHidden }) => {
     const flightPlanManager = useFlightPlanManager();
 
     const [magHeading] = useSimVar('PLANE HEADING DEGREES MAGNETIC', 'degrees');
@@ -77,11 +78,6 @@ export const ArcMode: React.FC<ArcModeProps> = ({ symbols, adirsAlign, rangeSett
         }
         return (
             <>
-                <Overlay
-                    heading={heading}
-                    rangeSetting={rangeSetting}
-                    tcasMode={tcasMode}
-                />
                 <g id="map" clipPath="url(#arc-mode-map-clip)">
                     <g visibility={mapHidden ? 'hidden' : 'visible'}>
                         <FlightPlan
@@ -107,11 +103,16 @@ export const ArcMode: React.FC<ArcModeProps> = ({ symbols, adirsAlign, rangeSett
                         || fmaLatMode === LateralMode.TRACK) && !fmaLatArmed) || !flightPlanManager.getCurrentFlightPlan().length) && (
                             <TrackLine x={384} y={620} heading={heading} track={track} />
                         )}
-                        <Traffic mode={Mode.ARC} mapParams={mapParams} />
+                        <Traffic mode={Mode.ARC} side={side} airTraffic={airTraffic} mapParams={mapParams} />
                     </g>
                     <RadioNeedle index={1} side={side} displayMode={Mode.ARC} centreHeight={620} />
                     <RadioNeedle index={2} side={side} displayMode={Mode.ARC} centreHeight={620} />
                 </g>
+                <Overlay
+                    heading={heading}
+                    rangeSetting={rangeSetting}
+                    tcasMode={tcasMode}
+                />
                 <ToWaypointIndicator info={flightPlanManager.getCurrentFlightPlan().computeActiveWaypointStatistics(ppos)} />
                 <ApproachMessage info={flightPlanManager.getAirportApproach()} flightPhase={fmgcFlightPhase} />
                 <TrackBug heading={heading} track={track} />
